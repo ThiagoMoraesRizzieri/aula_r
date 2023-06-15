@@ -1,0 +1,67 @@
+---
+title: "exercicio_ggplot2"
+output: html_document
+date: "2023-06-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+
+dados <- read.csv("Pokemon_full.csv")
+
+dados <- dados %>% 
+  dplyr::mutate(
+    tamanho = dplyr::case_when(
+            height < 5 ~ "baixinho",
+            height < 50 ~ "pequeno",
+            height < 100 ~ "médio",
+            TRUE ~ "altão"
+        )
+  )
+
+```
+
+
+```{r}
+
+
+df <- dados %>%
+  group_by(type) %>% 
+  summarise(
+    media_h = mean(height),
+    media_w = mean(weight)
+  ) 
+
+fator <- max(df$media_w)/max(df$media_h)
+fator
+
+df$media_h <- df$media_h*fator
+
+
+```
+
+
+```{r}
+df_pivot <- df %>% 
+  tidyr::pivot_longer(cols = c("media_h", "media_w"), names_to = "Tipo_de_media", values_to = "media")
+```
+
+```{r}
+df_pivot %>%
+  ggplot(aes(type, media, fill = Tipo_de_media)) +
+  geom_col(width=0.5, position = "dodge") +
+  theme(axis.text.x = element_text(face="bold",color="#993333", 
+                           size=9, angle=45, vjust = 1, hjust = 1)) +
+  labs(x = "Tipo do Pokemon", y = "Valor da média", title = "Média da altura e do peso de cada tipo de Pokemon") +
+  scale_color_manual(values = c("blue", "red"), 
+                     labels = c("Valores de Y estimados", "Valores de Y originais"),
+                     guide = guide_legend(title = "Cores")) +
+  scale_fill_discrete(
+    labels = c("Altura", "Peso")
+  )
+```
+
